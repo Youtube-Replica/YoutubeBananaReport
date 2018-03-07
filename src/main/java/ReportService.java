@@ -2,8 +2,8 @@
 
 import com.rabbitmq.client.*;
 import commands.Command;
-import commands.delete.DeleteUser;
-import commands.get.GetUser;
+import commands.delete.DeleteReport;
+import commands.get.GetReport;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,9 +11,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeoutException;
 
-public class UserService {
+public class ReportService {
 
-    private static final String RPC_QUEUE_NAME = "user-request";
+    private static final String RPC_QUEUE_NAME = "report-request";
 
     public static void main(String [] argv) {
 
@@ -46,7 +46,7 @@ public class UserService {
 
                     try {
                         String message = new String(body, "UTF-8");
-                        Command cmd = new DeleteUser();
+                        Command cmd = new DeleteReport();
                         HashMap<String, Object> props = new HashMap<String, Object>();
                         props.put("channel", channel);
                         props.put("properties", properties);
