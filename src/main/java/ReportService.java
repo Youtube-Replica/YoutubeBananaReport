@@ -2,9 +2,9 @@
 
 import com.rabbitmq.client.*;
 import commands.Command;
-import commands.delete.DeleteReport;
-import commands.get.GetReport;
-
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.json.simple.JSONObject;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
@@ -36,6 +36,7 @@ public class ReportService {
             Consumer consumer = new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+
                     AMQP.BasicProperties replyProps = new AMQP.BasicProperties
                             .Builder()
                             .correlationId(properties.getCorrelationId())
@@ -46,7 +47,8 @@ public class ReportService {
 
                     try {
                         String message = new String(body, "UTF-8");
-                        Command cmd = new DeleteReport();
+                        Command cmd = (Command) Class.forName("commands."+getCommand(message)).newInstance();
+
                         HashMap<String, Object> props = new HashMap<String, Object>();
                         props.put("channel", channel);
                         props.put("properties", properties);
@@ -58,6 +60,14 @@ public class ReportService {
                         executor.submit(cmd);
                     } catch (RuntimeException e) {
                         System.out.println(" [.] " + e.toString());
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InstantiationException e) {
+                        e.printStackTrace();
                     } finally {
                         synchronized (this) {
                             this.notify();
@@ -78,5 +88,13 @@ public class ReportService {
 //                }
 //        }
 
+
+
+    }
+    public static String getCommand(String message) throws ParseException {
+        JSONParser parser = new JSONParser();
+        JSONObject messageJson = (JSONObject) parser.parse(message);
+        String result = messageJson.get("command").toString();
+        return result;
     }
 }

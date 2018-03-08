@@ -1,19 +1,17 @@
-package commands.get;
+package commands;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
+import model.Report;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import commands.Command;
-import model.Report;
 
 import java.io.IOException;
 import java.util.HashMap;
 
-public class GetReport extends Command {
-
+public class DeleteReport extends Command {
     public void execute() {
         HashMap<String, Object> props = parameters;
 
@@ -31,7 +29,7 @@ public class GetReport extends Command {
         AMQP.BasicProperties properties = (AMQP.BasicProperties) props.get("properties");
         AMQP.BasicProperties replyProps = (AMQP.BasicProperties) props.get("replyProps");
         Envelope envelope = (Envelope) props.get("envelope");
-        String response = Report.getReportById(id);
+        String response = Report.deleteReportById(id);
 //        String response = (String)props.get("body");
         try {
             channel.basicPublish("", properties.getReplyTo(), replyProps, response.getBytes("UTF-8"));
