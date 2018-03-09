@@ -47,7 +47,7 @@ public class ReportService {
 
                     try {
                         String message = new String(body, "UTF-8");
-                        Command cmd = (Command) Class.forName("commands."+getCommand(message)).newInstance();
+                        commands.Command cmd = (Command) Class.forName("commands."+getCommand(message)).newInstance();
 
                         HashMap<String, Object> props = new HashMap<String, Object>();
                         props.put("channel", channel);
