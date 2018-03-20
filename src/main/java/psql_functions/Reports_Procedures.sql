@@ -1,17 +1,14 @@
-CREATE OR REPLACE FUNCTION GetReportByID(ReportID integer, SubmitterID integer, AgainstID integer)
-RETURNS TABLE(report_id int,
-   submitter_id int,
-   against_id int,
-   content varchar(8000),
-   status varchar(255)) AS
-$$
+CREATE OR REPLACE FUNCTION get_report_by_id (_id INT = NULL)
+RETURNS refcursor AS
+$BODY$
+DECLARE 
+ref refcursor;
 BEGIN
-   SELECT *
-   FROM Reports
-   WHERE (ReportID IS NULL OR ReportID = ReportID) AND (SubmitterID IS NULL OR SubmitterID = SubmitterID) AND (AgainstID IS NULL OR AgainstID = AgainstID);
-END
-$$
- LANGUAGE plpgsql;
+OPEN ref FOR SELECT * FROM Reports WHERE ReportID= _id;
+RETURN ref;
+END;    
+$BODY$
+LANGUAGE 'plpgsql' VOLATILE;
 
 
 

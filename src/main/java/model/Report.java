@@ -18,8 +18,12 @@ public class Report {
         JSONObject reportObject = new JSONObject();
         try {
             conn = DriverManager.getConnection(url, props);
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM Reports WHERE reportid="+id);
+            conn.setAutoCommit(false);
+            CallableStatement upperProc = conn.prepareCall("{? = call get_report_by_id( ? ) }");
+            upperProc.registerOutParameter(1,Types.OTHER);
+            upperProc.setInt(2,id);
+            upperProc.execute();
+            ResultSet rs = (ResultSet) upperProc.getObject(1);
             while (rs.next()) {
                 reportObject.put("submitterid",rs.getString(2));
                 reportObject.put("againstid",rs.getString(3));
@@ -27,7 +31,7 @@ public class Report {
                 reportObject.put("status",rs.getString(5));
             }
             rs.close();
-            st.close();
+            upperProc.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
