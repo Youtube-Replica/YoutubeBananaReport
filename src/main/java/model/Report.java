@@ -45,15 +45,18 @@ public class Report {
         props.setProperty("user", "postgres");
         props.setProperty("password", "passw0rd");
         Connection conn = null;
+        int rowsDeleted = 0;
         try {
             conn = DriverManager.getConnection(url, props);
-            CallableStatement upperProc = conn.prepareCall("{ call delete_report( ? ) }");
-            upperProc.setInt(1,id);
+            CallableStatement upperProc = conn.prepareCall("{? =call delete_report( ? ) }");
+            upperProc.registerOutParameter(1,Types.INTEGER);
+            upperProc.setInt(2,id);
             upperProc.execute();
+            rowsDeleted = upperProc.getInt(1);
             upperProc.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "rows deleted";
+        return rowsDeleted + " rows deleted";
     }
 }

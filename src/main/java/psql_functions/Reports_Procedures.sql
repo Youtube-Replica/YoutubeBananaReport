@@ -27,15 +27,19 @@ LANGUAGE plpgsql;
 
 
 
-CREATE OR REPLACE FUNCTION RemoveReportByID (ReportID int)
-RETURNS BOOL AS
-$$
+CREATE OR REPLACE FUNCTION delete_report(_id INT = NULL)
+RETURNS integer AS
+$BODY$
+DECLARE
+  a_count integer;
 BEGIN
-   DELETE FROM Reports
-   WHERE ReportID = ReportID;
-END
-$$
-LANGUAGE plpgsql;
+DELETE FROM Reports
+WHERE ReportID = _id;
+GET DIAGNOSTICS a_count = ROW_COUNT;
+RETURN a_count;
+END;
+$BODY$
+LANGUAGE 'plpgsql' VOLATILE;
   
 
 CREATE OR REPLACE FUNCTION ReportUserByID(SubmitterID int, AgainstID int, Content varchar(8000))
