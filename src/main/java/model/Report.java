@@ -12,8 +12,8 @@ public class Report {
         String url = "jdbc:postgresql://localhost/scalable";
         System.out.println("ID is: "+id);
         Properties props = new Properties();
-        props.setProperty("user", "postgres");
-        props.setProperty("password", "passw0rd");
+        props.setProperty("user", "nagaty");
+        props.setProperty("password", "61900");
         Connection conn = null;
         JSONObject reportObject = new JSONObject();
         try {
@@ -42,8 +42,8 @@ public class Report {
         String url = "jdbc:postgresql://localhost/scalable";
         System.out.println("ID is: "+id);
         Properties props = new Properties();
-        props.setProperty("user", "postgres");
-        props.setProperty("password", "passw0rd");
+        props.setProperty("user", "nagaty");
+        props.setProperty("password", "61900");
         Connection conn = null;
         int rowsDeleted = 0;
         try {
@@ -58,5 +58,54 @@ public class Report {
             e.printStackTrace();
         }
         return rowsDeleted + " rows deleted";
+    }
+
+    public static String createReport(String submitterid, String againstid, String status) {
+        String url = "jdbc:postgresql://localhost/scalable";
+        Properties props = new Properties();
+        props.setProperty("user", "nagaty");
+        props.setProperty("password", "61900");
+        Connection conn = null;
+        String rowsInserted ="";
+        try {
+            conn = DriverManager.getConnection(url, props);
+            CallableStatement upperProc = conn.prepareCall("{ call report_user_by_id( ?, ?, ? ) }");
+            upperProc.setInt(1, Integer.parseInt(submitterid));
+            upperProc.setInt(2,Integer.parseInt(againstid));
+            upperProc.setString(3,status);
+
+            rowsInserted = "rows inserted " + upperProc.executeUpdate();
+            //Set SQL Function to return 1 if successful insert
+            upperProc.close();
+        } catch (SQLException e) {
+            System.out.println("SQL Error State: " + e.getSQLState());
+                e.printStackTrace();
+            }
+
+        return rowsInserted;
+    }
+
+    public static String updateReportStatus(int id, String password) {
+        String url = "jdbc:postgresql://localhost/scalable";
+        Properties props = new Properties();
+        props.setProperty("user", "nagaty");
+        props.setProperty("password", "61900");
+        Connection conn = null;
+        int rowsAffected = 0;
+        try {
+            conn = DriverManager.getConnection(url, props);
+            CallableStatement upperProc = conn.prepareCall("{ ? = call update_report_by_id( ?, ? ) }");
+            upperProc.registerOutParameter(1,Types.INTEGER);
+            upperProc.setInt(2,id);
+            upperProc.setString(3,password);
+            upperProc.execute();
+            rowsAffected = upperProc.getInt(1);
+            upperProc.close();
+
+        } catch (SQLException e) {
+            System.out.println("SQL Error State: " + e.getSQLState());
+            e.printStackTrace();
+        }
+        return "Rows Affected: " + rowsAffected;
     }
 }

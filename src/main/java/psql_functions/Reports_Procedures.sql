@@ -11,20 +11,20 @@ $BODY$
 LANGUAGE 'plpgsql' VOLATILE;
 
 
-
-
-
-CREATE OR REPLACE FUNCTION UpdateReportByID (ReportID int, Status varchar(255))
-RETURNS BOOL AS
-$$
+CREATE OR REPLACE FUNCTION update_report_by_id (_reportID int, _status varchar(255))
+RETURNS integer AS
+$BODY$
+DECLARE
+  a_count integer;
 BEGIN
    UPDATE Reports
-   SET staus = status
-   WHERE ReportID = ReportID;
-END
-$$
-LANGUAGE plpgsql;
-
+   SET status = _status
+   WHERE reportID = _reportID;
+   GET DIAGNOSTICS a_count = ROW_COUNT;
+   RETURN a_count;
+END;
+$BODY$
+LANGUAGE 'plpgsql' VOLATILE;
 
 
 CREATE OR REPLACE FUNCTION delete_report(_id INT = NULL)
@@ -42,11 +42,13 @@ $BODY$
 LANGUAGE 'plpgsql' VOLATILE;
   
 
-CREATE OR REPLACE FUNCTION ReportUserByID(SubmitterID int, AgainstID int, Content varchar(8000))
-RETURNS BOOL AS $$
+CREATE OR REPLACE FUNCTION post_report_user_by_id(_submitterID int, _againstID int, _content varchar(8000))
+RETURNS VOID
+AS
+$BODY$
 BEGIN
-   INSERT INTO Reports (SubmitterID,AgainstID, Content)  
-   VALUES (SubmitterID, AgainstID,content);
-END
-$$
-LANGUAGE plpgsql;
+   INSERT INTO Reports (submitterid, againstid, content)
+   VALUES (_submitterID, _againstID, _content);
+END;
+$BODY$
+LANGUAGE 'plpgsql' VOLATILE;
