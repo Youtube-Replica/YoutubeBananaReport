@@ -52,3 +52,15 @@ BEGIN
 END;
 $BODY$
 LANGUAGE 'plpgsql' VOLATILE;
+
+CREATE OR REPLACE FUNCTION list_reports(_pageNumber int , _pageSize int) RETURNS refcursor AS $$
+    DECLARE ref refcursor;
+    BEGIN
+      OPEN ref  FOR SELECT *
+      FROM Reports
+      ORDER BY reportID
+      OFFSET _pageSize * (_pageNumber - 1)
+      LIMIT _pageSize;
+      RETURN ref;
+    END;
+    $$ LANGUAGE plpgsql;

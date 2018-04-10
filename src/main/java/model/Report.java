@@ -1,6 +1,7 @@
 package model;
 
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.sql.*;
@@ -83,6 +84,38 @@ public class Report {
             }
 
         return rowsInserted;
+    }
+
+    public static String getReportsPaginated(int pageSize, int pageNumber){
+        String url = "jdbc:postgresql://localhost/scalable";
+        Properties props = new Properties();
+        props.setProperty("user", "postgres");
+        props.setProperty("password", "passw0rd");
+        Connection conn = null;
+        JSONArray reportList = new JSONArray();
+        try {
+            conn = DriverManager.getConnection(url, props);
+            conn.setAutoCommit(false);
+            CallableStatement upperProc = conn.prepareCall("{? = call list_reports( ? , ? ) }");
+            upperProc.registerOutParameter(1,Types.OTHER);
+            upperProc.setInt(2,pageSize);
+            upperProc.setInt(3,pageNumber);
+            upperProc.execute();
+            ResultSet rs = (ResultSet) upperProc.getObject(1);
+            while (rs.next()) {
+                JSONObject reportObject = new JSONObject();
+                reportObject.put("Submitter",rs.getString("submitterid"));
+                reportObject.put("Against",rs.getString("againstid"));
+                reportObject.put("Content",rs.getString("content"));
+                reportObject.put("Status",rs.getString("status"));
+                reportList.add(reportObject);
+            }
+            rs.close();
+            upperProc.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return reportList.toString();
     }
 
     public static String updateReportStatus(int id, String password) {

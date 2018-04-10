@@ -19,19 +19,33 @@ public class RetrieveReport extends Command {
         Channel channel = (Channel) props.get("channel");
         JSONParser parser = new JSONParser();
         int id = 0;
+        int pageNumber = 0;
+        int pageSize = 0;
+        boolean list = false;
         try {
             JSONObject body = (JSONObject) parser.parse((String) props.get("body"));
             System.out.println(body.toString());
             JSONObject params = (JSONObject) parser.parse(body.get("parameters").toString());
-            id = Integer.parseInt(params.get("id").toString());
+            if(params.containsKey("id")) {
+                id = Integer.parseInt(params.get("id").toString());
+            }
+            else{
+                list = true;
+                pageNumber = Integer.parseInt(params.get("pageNumber").toString());
+                pageSize = Integer.parseInt(params.get("pageSize").toString());
+            }
         } catch (ParseException e) {
             e.printStackTrace();
         }
         AMQP.BasicProperties properties = (AMQP.BasicProperties) props.get("properties");
         AMQP.BasicProperties replyProps = (AMQP.BasicProperties) props.get("replyProps");
         Envelope envelope = (Envelope) props.get("envelope");
-        String response = Report.getReportById(id);
-//        String response = (String)props.get("body");
+        String response = "";
+        if(list){
+           response = Report.getReportsPaginated(pageNumber,pageSize);
+        }else{
+       response = Report.getReportById(id);
+        }
         try {
             channel.basicPublish("", properties.getReplyTo(), replyProps, response.getBytes("UTF-8"));
             channel.basicAck(envelope.getDeliveryTag(), false);

@@ -20,9 +20,10 @@ public class DeleteReport extends Command {
         int id = 0;
         try {
             JSONObject body = (JSONObject) parser.parse((String) props.get("body"));
-            System.out.println(body.toString());
             JSONObject params = (JSONObject) parser.parse(body.get("parameters").toString());
-            id = Integer.parseInt(params.get("id").toString());
+
+                id = Integer.parseInt(params.get("id").toString());
+
         } catch (ParseException e) {
             e.printStackTrace();
         }
