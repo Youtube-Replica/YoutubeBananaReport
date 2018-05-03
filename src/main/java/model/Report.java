@@ -24,25 +24,17 @@ public class Report {
     }
 
     public static String deleteReportById(int id){
-        String url = "jdbc:postgresql://localhost/scalable";
-        System.out.println("ID is: "+id);
-        Properties props = new Properties();
-        props.setProperty("user", "nagaty");
-        props.setProperty("password", "61900");
-        Connection conn = null;
-        int rowsDeleted = 0;
-        try {
-            conn = DriverManager.getConnection(url, props);
-            CallableStatement upperProc = conn.prepareCall("{? =call delete_report( ? ) }");
-            upperProc.registerOutParameter(1,Types.INTEGER);
-            upperProc.setInt(2,id);
-            upperProc.execute();
-            rowsDeleted = upperProc.getInt(1);
-            upperProc.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return rowsDeleted + " rows deleted";
+        String callStatement = "{? = call delete_report( ? ) }";
+        JSONObject json = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        JSONObject inputID = new JSONObject();
+        inputID.put("type",Types.INTEGER);
+        inputID.put("value",id);
+        jsonArray.add(inputID);
+        json.put("call_statement",callStatement);
+        json.put("out_type",Types.INTEGER);
+        json.put("input_array",jsonArray);
+        return json.toString();
     }
 
     public static String createReport(String submitterid, String againstid, String status) {
