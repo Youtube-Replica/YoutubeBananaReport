@@ -11,9 +11,10 @@ import model.Report;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class RetrieveReport extends Command {
+public class RetrieveReport extends ConcreteCommand {
 
     public void execute() {
+        this.consume("r1");
         HashMap<String, Object> props = parameters;
 
         Channel channel = (Channel) props.get("channel");
@@ -42,16 +43,26 @@ public class RetrieveReport extends Command {
         Envelope envelope = (Envelope) props.get("envelope");
         String response = "";
         if(list){
-           response = Report.getReportsPaginated(pageNumber,pageSize);
+            response = Report.getReportsPaginated(pageNumber,pageSize);
         }else{
-       response = Report.getReportById(id);
+            response = Report.getReportById(id);
         }
+        sendMessage("database",properties.getCorrelationId(),response);
+
+    }
+
+    @Override
+    public void handleApi(HashMap<String, Object> service_parameters) {
+        HashMap<String, Object> props = parameters;
+        AMQP.BasicProperties properties = (AMQP.BasicProperties) props.get("properties");
+        AMQP.BasicProperties replyProps = (AMQP.BasicProperties) props.get("replyProps");
+        String serviceBody = service_parameters.get("body").toString();
+
+        Envelope envelope = (Envelope) props.get("envelope");
         try {
-            channel.basicPublish("", properties.getReplyTo(), replyProps, response.getBytes("UTF-8"));
-            channel.basicAck(envelope.getDeliveryTag(), false);
+            channel.basicPublish("", properties.getReplyTo(), replyProps, serviceBody.getBytes("UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }

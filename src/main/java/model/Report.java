@@ -10,33 +10,17 @@ import java.util.Properties;
 public class Report {
     //example
     public static String getReportById(int id) {
-        String url = "jdbc:postgresql://localhost/scalable";
-        System.out.println("ID is: "+id);
-        Properties props = new Properties();
-        props.setProperty("user", "nagaty");
-        props.setProperty("password", "61900");
-        Connection conn = null;
-        JSONObject reportObject = new JSONObject();
-        try {
-            conn = DriverManager.getConnection(url, props);
-            conn.setAutoCommit(false);
-            CallableStatement upperProc = conn.prepareCall("{? = call get_report_by_id( ? ) }");
-            upperProc.registerOutParameter(1,Types.OTHER);
-            upperProc.setInt(2,id);
-            upperProc.execute();
-            ResultSet rs = (ResultSet) upperProc.getObject(1);
-            while (rs.next()) {
-                reportObject.put("submitterid",rs.getString(2));
-                reportObject.put("againstid",rs.getString(3));
-                reportObject.put("content",rs.getString(4));
-                reportObject.put("status",rs.getString(5));
-            }
-            rs.close();
-            upperProc.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    return reportObject.toString();
+       String callStatement = "{? = call get_report_by_id( ? ) }";
+       JSONObject json = new JSONObject();
+       JSONArray jsonArray = new JSONArray();
+       JSONObject inputObject = new JSONObject();
+       inputObject.put("type",Types.INTEGER);
+       inputObject.put("value",id);
+       jsonArray.add(inputObject);
+       json.put("out_type",Types.OTHER);
+       json.put("input_array",jsonArray);
+       json.put("call_statement",callStatement);
+       return json.toString();
     }
 
     public static String deleteReportById(int id){
@@ -87,35 +71,21 @@ public class Report {
     }
 
     public static String getReportsPaginated(int pageSize, int pageNumber){
-        String url = "jdbc:postgresql://localhost/scalable";
-        Properties props = new Properties();
-        props.setProperty("user", "postgres");
-        props.setProperty("password", "passw0rd");
-        Connection conn = null;
-        JSONArray reportList = new JSONArray();
-        try {
-            conn = DriverManager.getConnection(url, props);
-            conn.setAutoCommit(false);
-            CallableStatement upperProc = conn.prepareCall("{? = call list_reports( ? , ? ) }");
-            upperProc.registerOutParameter(1,Types.OTHER);
-            upperProc.setInt(2,pageSize);
-            upperProc.setInt(3,pageNumber);
-            upperProc.execute();
-            ResultSet rs = (ResultSet) upperProc.getObject(1);
-            while (rs.next()) {
-                JSONObject reportObject = new JSONObject();
-                reportObject.put("Submitter",rs.getString("submitterid"));
-                reportObject.put("Against",rs.getString("againstid"));
-                reportObject.put("Content",rs.getString("content"));
-                reportObject.put("Status",rs.getString("status"));
-                reportList.add(reportObject);
-            }
-            rs.close();
-            upperProc.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return reportList.toString();
+        String callStatement = "{? = call list_reports( ? , ? ) }";
+        JSONArray  jsonArray = new JSONArray();
+        JSONObject json = new JSONObject();
+        JSONObject inputSize = new JSONObject();
+        JSONObject inputNumber = new JSONObject();
+        inputSize.put("type",Types.INTEGER);
+        inputSize.put("value",pageSize);
+        inputNumber.put("type",Types.INTEGER);
+        inputNumber.put("value",pageNumber);
+        jsonArray.add(inputSize);
+        jsonArray.add(inputNumber);
+        json.put("out_type",Types.OTHER);
+        json.put("call_statement",callStatement);
+        json.put("input_array",jsonArray);
+        return json.toString();
     }
 
     public static String updateReportStatus(int id, String password) {
