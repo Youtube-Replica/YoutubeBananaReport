@@ -4,6 +4,7 @@ package model;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.lang.reflect.Type;
 import java.sql.*;
 import java.util.Properties;
 
@@ -37,29 +38,26 @@ public class Report {
         return json.toString();
     }
 
-    public static String createReport(String submitterid, String againstid, String status) {
-        String url = "jdbc:postgresql://localhost/scalable";
-        Properties props = new Properties();
-        props.setProperty("user", "nagaty");
-        props.setProperty("password", "61900");
-        Connection conn = null;
-        String rowsInserted ="";
-        try {
-            conn = DriverManager.getConnection(url, props);
-            CallableStatement upperProc = conn.prepareCall("{ call report_user_by_id( ?, ?, ? ) }");
-            upperProc.setInt(1, Integer.parseInt(submitterid));
-            upperProc.setInt(2,Integer.parseInt(againstid));
-            upperProc.setString(3,status);
-
-            rowsInserted = "rows inserted " + upperProc.executeUpdate();
-            //Set SQL Function to return 1 if successful insert
-            upperProc.close();
-        } catch (SQLException e) {
-            System.out.println("SQL Error State: " + e.getSQLState());
-                e.printStackTrace();
-            }
-
-        return rowsInserted;
+    public static String createReport(int submitterid, int againstid, String content) {
+        String callStatement = "{ call post_report_user_by_id( ?, ?, ? ) }";
+        JSONObject json = new JSONObject();
+        JSONObject inputSubmitter = new JSONObject();
+        JSONObject inputAgainst = new JSONObject();
+        JSONObject inputContent = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        inputSubmitter.put("type",Types.INTEGER);
+        inputSubmitter.put("value",submitterid);
+        inputAgainst.put("type",Types.INTEGER);
+        inputAgainst.put("value",againstid);
+        inputContent.put("type",Types.VARCHAR);
+        inputContent.put("value",content);
+        jsonArray.add(inputSubmitter);
+        jsonArray.add(inputAgainst);
+        jsonArray.add(inputContent);
+        json.put("call_statement",callStatement);
+        json.put("out_type",0);
+        json.put("input_array",jsonArray);
+        return json.toString();
     }
 
     public static String getReportsPaginated(int pageSize, int pageNumber){
