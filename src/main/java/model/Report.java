@@ -3,10 +3,8 @@ package model;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
-import java.lang.reflect.Type;
 import java.sql.*;
-import java.util.Properties;
+
 
 public class Report {
     //example
@@ -78,27 +76,21 @@ public class Report {
         return json.toString();
     }
 
-    public static String updateReportStatus(int id, String password) {
-        String url = "jdbc:postgresql://localhost/scalable";
-        Properties props = new Properties();
-        props.setProperty("user", "nagaty");
-        props.setProperty("password", "61900");
-        Connection conn = null;
-        int rowsAffected = 0;
-        try {
-            conn = DriverManager.getConnection(url, props);
-            CallableStatement upperProc = conn.prepareCall("{ ? = call update_report_by_id( ?, ? ) }");
-            upperProc.registerOutParameter(1,Types.INTEGER);
-            upperProc.setInt(2,id);
-            upperProc.setString(3,password);
-            upperProc.execute();
-            rowsAffected = upperProc.getInt(1);
-            upperProc.close();
-
-        } catch (SQLException e) {
-            System.out.println("SQL Error State: " + e.getSQLState());
-            e.printStackTrace();
-        }
-        return "Rows Affected: " + rowsAffected;
+    public static String updateReportStatus(int id, String status) {
+        String callStatement = "{ ? = call update_report_by_id( ?, ? ) }";
+        JSONObject json = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        JSONObject inputID = new JSONObject();
+        JSONObject inputStatus = new JSONObject();
+        inputID.put("type",Types.INTEGER);
+        inputID.put("value",id);
+        inputStatus.put("type",Types.VARCHAR);
+        inputStatus.put("value",status);
+        jsonArray.add(inputID);
+        jsonArray.add(inputStatus);
+        json.put("out_type",Types.INTEGER);
+        json.put("call_statement",callStatement);
+        json.put("input_array",jsonArray);
+        return json.toString();
     }
 }
