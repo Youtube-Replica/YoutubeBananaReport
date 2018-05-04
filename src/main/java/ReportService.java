@@ -21,7 +21,8 @@ public class ReportService {
         final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
 
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+        String host = System.getenv("RABBIT_MQ_SERVICE_HOST");
+        factory.setHost(host);
         Connection connection = null;
         try {
             connection = factory.newConnection();
