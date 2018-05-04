@@ -29,7 +29,6 @@ public class ReportService {
 
             channel.queueDeclare(RPC_QUEUE_NAME, false, false, false, null);
 
-            channel.basicQos(1);
 
             System.out.println(" [x] Awaiting RPC requests");
 
