@@ -1,7 +1,10 @@
+package Service;
 
-
+import Client.Client;
 import com.rabbitmq.client.*;
 import commands.Command;
+import io.netty.buffer.Unpooled;
+import io.netty.util.CharsetUtil;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.json.simple.JSONObject;
@@ -11,25 +14,26 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeoutException;
 
-public class ReportService {
+public class ReportService extends ServiceInterface{
 
     private static final String RPC_QUEUE_NAME = "report-request";
 
-    public static void main(String [] argv) {
+    public void run() {
 
         //initialize thread pool of fixed size
-        final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         Connection connection = null;
         try {
             connection = factory.newConnection();
-            final Channel channel = connection.createChannel();
+            channel = connection.createChannel();
 
             channel.queueDeclare(RPC_QUEUE_NAME, false, false, false, null);
 
 
+            Client.Client.serverChannel.writeAndFlush(Unpooled.copiedBuffer("Information> [x] Awaiting RPC requests ", CharsetUtil.UTF_8));
             System.out.println(" [x] Awaiting RPC requests");
 
             Consumer consumer = new DefaultConsumer(channel) {
@@ -40,6 +44,7 @@ public class ReportService {
                             .Builder()
                             .correlationId(properties.getCorrelationId())
                             .build();
+                    Client.Client.serverChannel.writeAndFlush(Unpooled.copiedBuffer("Information> Responding to corrID: "+ properties.getCorrelationId(), CharsetUtil.UTF_8));
                     System.out.println("Responding to corrID: "+ properties.getCorrelationId());
 
                     String response = "";
@@ -47,7 +52,6 @@ public class ReportService {
                     try {
                         String message = new String(body, "UTF-8");
                         commands.Command cmd = (Command) Class.forName("commands."+getCommand(message)).newInstance();
-
                         HashMap<String, Object> props = new HashMap<String, Object>();
                         props.put("channel", channel);
                         props.put("properties", properties);
@@ -58,14 +62,19 @@ public class ReportService {
                         cmd.init(props);
                         executor.submit(cmd);
                     } catch (RuntimeException e) {
+                        Client.Client.serverChannel.writeAndFlush(Unpooled.copiedBuffer("Error> Runtime " + e.getMessage(), CharsetUtil.UTF_8));
                         System.out.println(" [.] " + e.toString());
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
                     } catch (IllegalAccessException e) {
+                        Client.Client.serverChannel.writeAndFlush(Unpooled.copiedBuffer("Error> IllegalAccessException " + e.getMessage(), CharsetUtil.UTF_8));
+                        e.printStackTrace();
+                    } catch (ParseException e) {
+                        Client.Client.serverChannel.writeAndFlush(Unpooled.copiedBuffer("Error> ParseException " + e.getMessage(), CharsetUtil.UTF_8));
                         e.printStackTrace();
                     } catch (InstantiationException e) {
+                        Client.Client.serverChannel.writeAndFlush(Unpooled.copiedBuffer("Error> InstantiationException " + e.getMessage(), CharsetUtil.UTF_8));
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        Client.Client.serverChannel.writeAndFlush(Unpooled.copiedBuffer("Error> ClassNotFoundException " + e.getMessage(), CharsetUtil.UTF_8));
                         e.printStackTrace();
                     } finally {
                         synchronized (this) {
@@ -79,15 +88,6 @@ public class ReportService {
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
-//        finally {
-//            if (connection != null)
-//                try {
-//                    connection.close();
-//                } catch (IOException _ignore) {
-//                }
-//        }
-
-
 
     }
     public static String getCommand(String message) throws ParseException {
@@ -96,4 +96,5 @@ public class ReportService {
         String result = messageJson.get("command").toString();
         return result;
     }
+
 }
